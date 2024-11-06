@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import csv
+import time
 
 # Definindo cabeçalhos para evitar bloqueio
 HEADERS = {
@@ -23,13 +24,26 @@ def fetch_sitemap_urls(sitemap_url):
     return urls
 
 
-def scrape_post_data(url):
+def scrape_post_data(url, max_retries=5):
     response = requests.get(url, headers=HEADERS)
     soup = BeautifulSoup(response.content, "html.parser")
 
+    # Tenta verificar se o conteúdo carregou corretamente
+    attempts = 0
+    while not soup.select_one("#developer a") and attempts < max_retries:
+        print(f"Tentativa {attempts + 1} de {max_retries}: aguardando carregamento do conteúdo em {url}")
+        time.sleep(2)  # Atraso para permitir o carregamento
+        response = requests.get(url, headers=HEADERS)
+        soup = BeautifulSoup(response.content, "html.parser")
+        attempts += 1
+
+    if not soup.select_one("#developer a"):
+        print(f"Erro: não foi possível carregar o conteúdo em {url} após {max_retries} tentativas.")
+        return None
+
     # Extrair campos com os seletores especificados
-    title = soup.select_one("h1.blog-show-title.text-center").get_text(strip=True) if soup.select_one(
-        "h1.blog-show-title.text-center") else None
+    title = soup.select_one("#developer a").get_text(strip=True) if soup.select_one(
+        "#developer a") else None
     publication_date = soup.select_one(".blog-show-data").get_text(strip=True) if soup.select_one(
         ".blog-show-data") else None
     category = soup.select_one(".categoria-link").get_text(strip=True) if soup.select_one(".categoria-link") else None
@@ -75,8 +89,12 @@ def main():
         for post_url in post_urls:
             print(f"Extraindo dados de: {post_url}")
             post_data = scrape_post_data(post_url)
-            writer.writerow(post_data)
-            all_posts_data.append(post_data)
+            if post_data:
+                writer.writerow(post_data)
+                all_posts_data.append(post_data)
+            else:
+                print(f"Falha ao extrair dados de {post_url}")
+            break
 
     print(f"Dados salvos no arquivo {csv_filename}")
 
