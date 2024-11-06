@@ -1,80 +1,77 @@
-# Blog Post Scraper
+# Blog Scraper - Extração de Dados de Posts de Blog
 
-Este repositório contém um script em Python para extrair dados de posts de blog de um site específico, com base em seletores CSS definidos. O script navega em URLs encontradas no sitemap do site, coleta informações específicas de cada post e salva os dados em um arquivo CSV. Além disso, ele baixa as imagens destacadas de cada post em uma pasta local.
+Este script foi desenvolvido para extrair dados de posts de blog de um site, coletando informações como título, data de publicação, categoria, conteúdo e imagem destacada. O script utiliza o **Selenium** para simular um navegador e lidar com conteúdo dinâmico carregado via JavaScript.
 
 ## Funcionalidades
 
-- Extração de dados de posts de blog, incluindo título, data de publicação, categoria, conteúdo e imagem destacada.
-- Salvamento dos dados em um arquivo CSV.
-- Download das imagens destacadas para uma pasta específica.
+- **Título**: Extrai o título do post.
+- **Data de Publicação**: Extrai a data de publicação do post.
+- **Categoria**: Extrai a categoria do post.
+- **Imagem Destacada**: Extrai o URL da imagem destacada (não faz download da imagem, apenas armazena a URL).
+- **Conteúdo**: Concatena todo o texto do conteúdo do post.
 
-## Campos Extraídos
+### Requisitos
 
-O script coleta os seguintes campos para cada post:
+- **Python 3.x**
+- **Bibliotecas**:
+  - `requests`: Para fazer requisições HTTP.
+  - `beautifulsoup4`: Para parsear o HTML.
+  - `selenium`: Para simular o navegador e carregar conteúdo JavaScript.
+  - `csv`: Para salvar os dados em formato CSV.
+  
+  Instale as dependências com o comando:
+  ```bash
+  pip install requests beautifulsoup4 selenium
+  ```
 
-- **Título**: Selecionado com o seletor CSS `h1.blog-show-title.text-center`.
-- **Data de Publicação**: Selecionado com o seletor `.blog-show-data`.
-- **Categoria**: Selecionado com o seletor `.categoria-link`.
-- **Imagem Destacada**: Selecionado com o seletor `.ctt-image img` e salvo localmente.
-- **Conteúdo**: Todos os textos da classe `.ctt-text`, concatenados.
+- **WebDriver**: Para usar o Selenium com o navegador Chrome, baixe o **ChromeDriver** correspondente à sua versão do Chrome:
+  - [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/downloads)
+  - Ou utilize o **GeckoDriver** para Firefox.
 
-## Pré-requisitos
-
-Certifique-se de que o Python 3 esteja instalado no seu sistema e que as bibliotecas necessárias estejam instaladas.
-
-### Instalação de Dependências
-
-Use o seguinte comando para instalar as dependências:
-
-```bash
-pip install requests beautifulsoup4 lxml
-```
-
-## Estrutura do Projeto
-
-```plaintext
-.
-├── scraper.py            # Arquivo principal do script
-├── blog_posts.csv        # Arquivo CSV gerado com os dados dos posts
-├── imagens_destacadas/   # Pasta onde as imagens destacadas são salvas
-└── README.md             # Este arquivo
-```
+  Certifique-se de que o WebDriver esteja no seu PATH ou forneça o caminho completo para ele no script.
 
 ## Como Usar
 
-1. Clone o repositório para sua máquina local:
+1. **Baixar os Scripts**:
+   - `importer.py`: Script principal que faz a extração de dados do blog.
+   - `importer_selenium.py`: Versão com Selenium que simula um navegador para carregar conteúdo dinâmico.
 
-    ```bash
-    git clone https://github.com/seuusuario/blog-post-scraper.git
-    cd blog-post-scraper
-    ```
+2. **Executar o Script**:
+   - Abra o terminal ou linha de comando na pasta onde os scripts estão.
+   - Execute o script com:
+     ```bash
+     python3 importer_selenium.py
+     ```
+   - O script irá buscar as URLs dos posts do sitemap (`https://novaturismo.com.br/sitemap.xml`), acessar cada post e extrair as informações.
 
-2. Execute o script:
+3. **Resultados**:
+   - Os dados extraídos serão salvos em um arquivo CSV chamado `blog_posts.csv`.
+   - O script salva o **src da imagem destacada** ao invés de baixar a imagem.
 
-    ```bash
-    python scraper.py
-    ```
+## Estrutura do CSV
 
-3. O script irá:
-   - Ler o sitemap em `https://novaturismo.com.br/sitemap.xml`.
-   - Visitar cada URL de post de blog.
-   - Extrair os dados e salvá-los em `blog_posts.csv`.
-   - Salvar imagens destacadas em uma pasta chamada `imagens_destacadas`.
+O arquivo CSV gerado conterá as seguintes colunas:
 
-## Exemplo de Saída
+- **Titulo**: O título do post.
+- **Data de publicação**: A data de publicação do post.
+- **Categoria**: A categoria do post.
+- **Imagem Destacada**: A URL da imagem destacada (não o arquivo, apenas o link).
+- **Conteudo**: O conteúdo completo do post.
 
-Após executar o script, você verá um arquivo `blog_posts.csv` com o seguinte conteúdo:
+## Exemplo de CSV
 
 ```csv
-Titulo,Data de publicação,Categoria,Imagem Destacada,Conteudo
-"Western Union: uma excelente opção...","01/11/2024","Viagem","imagens_destacadas/imagem1.jpg","Conteúdo do post..."
+Titulo, Data de publicação, Categoria, Imagem Destacada, Conteudo
+"Western Union: uma excelente opção para envio de dinheiro para a sua viagem à Argentina", "2024-11-05", "Outros", "https://novaturismo.com.br/images/ilustracao-1.jpg", "Texto completo do conteúdo do post..."
 ```
 
-### Observações
+## Como Funciona
 
-- Se o script não encontrar um campo específico, ele registrará o valor como `None`.
-- Certifique-se de que o site alvo permite scraping de conteúdo antes de executar o script, respeitando os Termos de Serviço.
+1. O script faz uma requisição HTTP ao **sitemap.xml** do site, que contém as URLs dos posts do blog.
+2. Para cada URL, o script usa **Selenium** para carregar o conteúdo da página, aguardar o carregamento do JavaScript e então extrair os dados necessários.
+3. O script salva os dados extraídos em um arquivo CSV, e a URL da imagem destacada é registrada.
 
-## Licença
+## Observações
 
-Este projeto é de uso livre para fins educacionais e de demonstração.
+- **Lazy Load**: O script foi projetado para lidar com sites que carregam conteúdo dinamicamente através de JavaScript (lazy loading).
+- **Execução Headless**: O script usa o Selenium em modo headless, ou seja, sem abrir uma janela de navegador, para otimizar o desempenho.
